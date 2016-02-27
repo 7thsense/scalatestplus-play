@@ -25,14 +25,16 @@ import BrowserFactory.UnavailableDriver
 import org.openqa.selenium.safari.SafariDriver
 import org.openqa.selenium.chrome.ChromeDriver
 
+import scala.util.{Success, Try}
+
 /* TODO: Make ConfiguredBrowser require a ServerProvider also, I think. */
 
 /**
  * Trait that provides a new Selenium `WebDriver` instance per ScalaTest `Suite`.
- * 
- * This `SuiteMixin` trait's overridden `run` method 
+ *
+ * This `SuiteMixin` trait's overridden `run` method
  * places a reference to the `WebDriver` provided by `webDriver` under the key `org.scalatestplus.play.webDriver`.
- * This allows any nested `Suite`s to access the `Suite`'s 
+ * This allows any nested `Suite`s to access the `Suite`'s
  * `WebDriver` as well, most easily by having the nested `Suite`s mix in the
  * [[org.scalatestplus.play.ConfiguredServer ConfiguredBrowser]] trait. On the status returned by `super.run`, this
  * trait's overridden `run` method registers a block of code to close the `WebDriver` to be executed when the `Status`
@@ -41,9 +43,9 @@ import org.openqa.selenium.chrome.ChromeDriver
  * This trait also overrides `Suite.withFixture` to cancel tests automatically if the related
  * `WebDriver` is not available on the host platform.
  *
- * This trait's self-type, [[org.scalatestplus.play.ServerProvider ServerProvider]],  will ensure 
+ * This trait's self-type, [[org.scalatestplus.play.ServerProvider ServerProvider]],  will ensure
  * a `TestServer` and `Application` are available to each test. The self-type will require that you mix in either
- * [[org.scalatestplus.play.OneServerPerSuite OneServerPerSuite]], [[org.scalatestplus.play.OneServerPerTest OneServerPerTest]], 
+ * [[org.scalatestplus.play.OneServerPerSuite OneServerPerSuite]], [[org.scalatestplus.play.OneServerPerTest OneServerPerTest]],
  * [[org.scalatestplus.play.ConfiguredServer ConfiguredServer]] before you mix in this trait. Your choice among these three
  * `ServerProvider`s will determine the extent to which one or more `TestServer`s are shared by multiple tests.
  *
@@ -53,21 +55,21 @@ import org.openqa.selenium.chrome.ChromeDriver
  *
  * <pre class="stHighlight">
  * package org.scalatestplus.play.examples.onebrowserpersuite
- * 
+ *
  * import play.api.test._
  * import org.scalatest._
  * import org.scalatestplus.play._
  * import play.api.{Play, Application}
- * 
+ *
  * class ExampleSpec extends PlaySpec with OneServerPerSuite with OneBrowserPerSuite with FirefoxFactory {
- * 
+ *
  *   // Override app if you need a Application with other than non-default parameters.
  *   implicit override lazy val app: Application =
  *     FakeApplication(
  *       additionalConfiguration = Map("ehcacheplugin" -&gt; "disabled"),
  *       withRoutes = TestRoute
  *     )
- * 
+ *
  *   "The OneBrowserPerSuite trait" must {
  *     "provide an Application" in {
  *       app.configuration.getString("ehcacheplugin") mustBe Some("disabled")
@@ -102,18 +104,18 @@ import org.openqa.selenium.chrome.ChromeDriver
  *
  * If you have many tests that can share the same `Application`, `TestServer`, and `WebDriver`, and you don't want to put them all into one
  * test class, you can place them into different "nested" `Suite` classes.
- * Create a master suite that extends `OneServerPerSuite` and declares the nested 
+ * Create a master suite that extends `OneServerPerSuite` and declares the nested
  * `Suite`s. Annotate the nested suites with `@DoNotDiscover` and have them extend `ConfiguredBrowser`. Here's an example:
  *
  * <pre class="stHighlight">
  * package org.scalatestplus.play.examples.onebrowserpersuite
- * 
+ *
  * import play.api.test._
  * import org.scalatest._
  * import tags.FirefoxBrowser
  * import org.scalatestplus.play._
  * import play.api.{Play, Application}
- * 
+ *
  * // This is the "master" suite
  * class NestedExampleSpec extends Suites(
  *   new OneSpec,
@@ -128,15 +130,15 @@ import org.openqa.selenium.chrome.ChromeDriver
  *       withRoutes = TestRoute
  *     )
  * }
- *  
+ *
  * // These are the nested suites
+ *
  * @DoNotDiscover class OneSpec extends PlaySpec with ConfiguredServer with ConfiguredBrowser
  * @DoNotDiscover class TwoSpec extends PlaySpec with ConfiguredServer with ConfiguredBrowser
  * @DoNotDiscover class RedSpec extends PlaySpec with ConfiguredServer with ConfiguredBrowser
- * 
  * @DoNotDiscover
  * class BlueSpec extends PlaySpec with ConfiguredServer with ConfiguredBrowser {
- * 
+ *
  *   "The OneBrowserPerSuite trait" must {
  *     "provide an Application" in {
  *       app.configuration.getString("ehcacheplugin") mustBe Some("disabled")
@@ -166,29 +168,29 @@ import org.openqa.selenium.chrome.ChromeDriver
  * It is possible to use `OneBrowserPerSuite` to run the same tests in more than one browser. Nevertheless,
  * you should consider the approach taken by [[org.scalatestplus.play.AllBrowsersPerSuite AllBrowsersPerSuite]]
  * and [[org.scalatestplus.play.AllBrowsersPerTest AllBrowsersPerTest]]
- * instead, as it requires a bit less boilerplate code than `OneBrowserPerSuite` to test in multiple browsers. 
+ * instead, as it requires a bit less boilerplate code than `OneBrowserPerSuite` to test in multiple browsers.
  * If you prefer to use `OneBrowserPerSuite`, however, simply place your tests in an abstract superclass, then define concrete subclasses
  * for each browser you wish to test against. Here's an example:
- * 
+ *
  * <pre class="stHighlight">
  * package org.scalatestplus.play.examples.onebrowserpersuite
- * 
+ *
  * import play.api.test._
  * import org.scalatest._
  * import tags._
  * import org.scalatestplus.play._
  * import play.api.{Play, Application}
- * 
+ *
  * // Place your tests in an abstract class
  * abstract class MultiBrowserExampleSpec extends PlaySpec with OneServerPerSuite with OneBrowserPerSuite {
- * 
+ *
  *   // Override app if you need an Application with other than non-default parameters.
  *   implicit override lazy val app: Application =
  *     FakeApplication(
  *       additionalConfiguration = Map("ehcacheplugin" -> "disabled"),
  *       withRoutes = TestRoute
  *     )
- * 
+ *
  *   "The OneBrowserPerSuite trait" must {
  *     "provide an Application" in {
  *       app.configuration.getString("ehcacheplugin") mustBe Some("disabled")
@@ -219,7 +221,7 @@ import org.openqa.selenium.chrome.ChromeDriver
  *     }
  *   }
  * }
- * 
+ *
  * // Then make a subclass that mixes in the factory for each
  * // Selenium driver you want to test with.
  * @FirefoxBrowser class FirefoxExampleSpec extends MultiBrowserExampleSpec with FirefoxFactory
@@ -230,7 +232,7 @@ import org.openqa.selenium.chrome.ChromeDriver
  * </pre>
  *
  * The concrete subclasses include tag annotations describing the browser used to make it
- * easier to include or exclude browsers in specific runs. This is not strictly necessary since if a browser is not supported 
+ * easier to include or exclude browsers in specific runs. This is not strictly necessary since if a browser is not supported
  * on the host platform the tests will be automatically canceled. For example, here's how the output would look
  * if you ran the above tests on a platform that did not support Selenium drivers for Chrome or Internet Explorer
  * using sbt:
@@ -290,9 +292,9 @@ import org.openqa.selenium.chrome.ChromeDriver
  * [info] <span class="stGreen">- must provide an actual running server</span>
  * [info] <span class="stGreen">- must provide a web driver</span>
  * </pre>
- * 
+ *
  * For comparison, here is what the output would look like if you just selected tests tagged with `FirefoxBrowser` in sbt:
- * 
+ *
  * <pre class="stREPL">
  * &gt; test-only *onebrowserpersuite* -- -n org.scalatest.tags.FirefoxBrowser
  * [info] <span class="stGreen">FirefoxExampleSpec:</span>
@@ -316,8 +318,8 @@ import org.openqa.selenium.chrome.ChromeDriver
 trait OneBrowserPerSuite extends SuiteMixin with WebBrowser with Eventually with IntegrationPatience with BrowserFactory { this: Suite with ServerProvider =>
 
   /**
-   * An implicit instance of `WebDriver`, created by calling `createWebDriver`.  
-   * If there is an error when creating the `WebDriver`, `UnavailableDriver` will be assigned 
+   * An implicit instance of `WebDriver`, created by calling `createWebDriver`.
+   * If there is an error when creating the `WebDriver`, `UnavailableDriver` will be assigned
    * instead.
    */
   implicit lazy val webDriver: WebDriver = createWebDriver()
@@ -349,7 +351,7 @@ trait OneBrowserPerSuite extends SuiteMixin with WebBrowser with Eventually with
    * @return a `Status` object that indicates when all tests and nested suites started by this method have completed, and whether or not a failure occurred.
    */
   abstract override def run(testName: Option[String], args: Args): Status = {
-    val cleanup: Boolean => Unit = { _ =>
+    val cleanup: Try[Boolean] => Unit = { _ =>
       webDriver match {
         case _: UnavailableDriver => // do nothing for UnavailableDriver
         case safariDriver: SafariDriver => safariDriver.quit()
@@ -365,7 +367,7 @@ trait OneBrowserPerSuite extends SuiteMixin with WebBrowser with Eventually with
       status
     } catch {
       case ex: Throwable =>
-        cleanup(false)
+        cleanup(Success(false))
         throw ex
     }
   }
