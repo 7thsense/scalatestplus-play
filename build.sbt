@@ -22,13 +22,10 @@ lazy val `scalatestplus-play-root` = project
   .in(file("."))
   .enablePlugins(PlayRootProject)
   .aggregate(`scalatestplus-play`)
-  .settings(
-    sonatypeProfileName := "org.scalatestplus.play"
-  )
 
 lazy val `scalatestplus-play` = project
   .in(file("module"))
-  .enablePlugins(Playdoc, PlayLibrary, PlayReleaseBase)
+  .enablePlugins(Playdoc, PlayBuildBase)
   .settings(
     organization := "org.scalatestplus.play",
     libraryDependencies ++= Seq(
@@ -43,8 +40,12 @@ lazy val `scalatestplus-play` = project
     testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oTK"),
 
     scalacOptions in (Compile, doc) := Seq("-doc-title", "ScalaTest + Play, " + releaseVersion),
-    
-    pomExtra := PomExtra
+
+    pomExtra := PomExtra,
+    scalaVersion := "2.11.8",
+    bintrayOrganization := Some("7thsense"),
+    bintrayRepository := "maven"
+
   )
 
 lazy val docs = project
@@ -56,7 +57,7 @@ lazy val docs = project
       "com.typesafe.play" %% "play-cache" % PlayVersion % Test,
       "org.mockito" % "mockito-core" % "1.9.5" % Test
     ),
-    
+
     parallelExecution in Test := false,
 
     PlayDocsKeys.scalaManualSourceDirectories := (baseDirectory.value / "manual" / "working" / "scalaGuide" ** "code").get,
@@ -74,7 +75,7 @@ lazy val docs = project
     SettingKey[Seq[File]]("migrationManualSources") := Nil
   )
   .dependsOn(`scalatestplus-play`)
-  
+
 playBuildRepoName in ThisBuild := "scalatestplus-play"
 
 lazy val PomExtra = {
@@ -100,4 +101,5 @@ lazy val PomExtra = {
     </developer>
   </developers>
 }
+
 
